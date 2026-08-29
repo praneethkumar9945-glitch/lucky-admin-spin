@@ -1,0 +1,97 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
+import { ArrowLeft, Dices, Save, Target } from "lucide-react";
+import { loadSettings, saveSettings, SEGMENT_COUNT, type WheelSettings } from "@/lib/wheel-store";
+
+export const Route = createFileRoute("/admin")({
+  head: () => ({
+    meta: [
+      { title: "Admin Controls — Lucky Spin Wheel" },
+      { name: "description", content: "Edit the 10 wheel prizes and control where the lucky wheel stops." },
+      { name: "robots", content: "noindex" },
+    ],
+  }),
+  component: AdminPage,
+});
+
+function AdminPage() {
+  const [settings, setSettings] = useState<WheelSettings>(() => loadSettings());
+  const [saved, setSaved] = useState(false);
+
+  const updateLabel = (i: number, value: string) => {
+    setSettings((s) => {
+      const labels = [...s.labels];
+      labels[i] = value.slice(0, 24);
+      return { ...s, labels };
+    });
+    setSaved(false);
+  };
+
+  const setForced = (i: number) => {
+    setSettings((s) => ({ ...s, forcedIndex: s.forcedIndex === i ? -1 : i }));
+    setSaved(false);
+  };
+
+  const save = () => {
+    saveSettings({
+      labels: settings.labels.map((l, i) => (l.trim() ? l : `Prize ${i + 1}`)),
+      forcedIndex: settings.forcedIndex,
+    });
+    setSaved(true);
+  };
+
+  return (
+    <main className="mx-auto min-h-screen w-full max-w-2xl px-4 py-10">
+      <Link to="/" className="link-admin mb-6 inline-flex">
+        <ArrowLeft className="h-4 w-4" /> Back to wheel
+      </Link>
+
+      <h1 className="font-display text-3xl font-black tracking-tight">Admin Controls</h1>
+      <p className="mt-2 text-muted-foreground">
+        Edit the 10 prizes and choose where the wheel will stop. Leave the target on
+        “Random” for a fair spin.
+      </p>
+
+      <section className="mt-8 space-y-3">
+        {settings.labels.map((label, i) => {
+          const forced = settings.forcedIndex === i;
+          return (
+            <div key={i} className={`admin-row ${forced ? "admin-row-forced" : ""}`}>
+              <span className="admin-index">{i + 1}</span>
+              <input
+                value={label}
+                onChange={(e) => updateLabel(i, e.target.value)}
+                maxLength={24}
+                className="admin-input"
+                aria-label={`Prize ${i + 1} label`}
+              />
+              <button
+                onClick={() => setForced(i)}
+                className={forced ? "btn-target btn-target-active" : "btn-target"}
+                aria-pressed={forced}
+              >
+                <Target className="h-4 w-4" />
+                {forced ? "Will stop here" : "Stop here"}
+              </button>
+            </div>
+          );
+        })}
+      </section>
+
+      <div className="mt-6 flex flex-wrap items-center gap-3">
+        <button onClick={() => setSettings((s) => ({ ...s, forcedIndex: -1 }))} className="btn-target">
+          <Dices className="h-4 w-4" /> Random outcome
+        </button>
+        <button onClick={save} className="btn-spin">
+          <Save className="h-5 w-5" /> {saved ? "Saved ✓" : "Save changes"}
+        </button>
+      </div>
+
+      <p className="mt-4 text-sm text-muted-foreground">
+        {settings.forcedIndex >= 0
+          ? `Next spin is rigged to stop on “${settings.labels[settings.forcedIndex]}”. Remember to save.`
+          : `Outcome is currently random across all ${SEGMENT_COUNT} prizes.`}
+      </p>
+    </main>
+  );
+}
