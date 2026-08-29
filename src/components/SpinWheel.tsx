@@ -50,7 +50,9 @@ export function SpinWheel({
     const textR = r * 0.66;
     const tx = c + textR * Math.cos(rad(mid));
     const ty = c + textR * Math.sin(rad(mid));
-    return { label, i, x1, y1, x2, y2, tx, ty, mid };
+    const norm = ((mid % 360) + 360) % 360;
+    const textAngle = norm > 90 && norm < 270 ? mid + 180 : mid;
+    return { label, i, x1, y1, x2, y2, tx, ty, textAngle };
   });
 
   return (
