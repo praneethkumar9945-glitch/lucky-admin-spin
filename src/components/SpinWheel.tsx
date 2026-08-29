@@ -87,7 +87,7 @@ export function SpinWheel({
                 y={s.ty}
                 textAnchor="middle"
                 dominantBaseline="middle"
-                transform={`rotate(${s.mid} ${s.tx} ${s.ty})`}
+                transform={`rotate(${s.textAngle} ${s.tx} ${s.ty})`}
                 fill="var(--wheel-text)"
                 fontSize="16"
                 fontWeight="700"
