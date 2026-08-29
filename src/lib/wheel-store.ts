@@ -30,11 +30,12 @@ export function loadSettings(): WheelSettings {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) throw new Error("empty");
     const parsed = JSON.parse(raw) as Partial<WheelSettings>;
-    const labels = Array.from({ length: SEGMENT_COUNT }, (_, i) =>
-      typeof parsed.labels?.[i] === "string" && parsed.labels[i].trim()
-        ? parsed.labels[i].slice(0, 24)
-        : DEFAULT_LABELS[i],
-    );
+    const labels = Array.from({ length: SEGMENT_COUNT }, (_, i) => {
+      const raw = parsed.labels?.[i];
+      return typeof raw === "string" && raw.trim()
+        ? raw.slice(0, 24)
+        : (DEFAULT_LABELS[i] ?? `Prize ${i + 1}`);
+    });
     const forcedIndex =
       typeof parsed.forcedIndex === "number" &&
       parsed.forcedIndex >= -1 &&

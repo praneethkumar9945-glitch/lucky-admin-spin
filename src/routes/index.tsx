@@ -46,7 +46,7 @@ function SpinPage() {
     setSpinning(true);
     window.setTimeout(() => {
       setSpinning(false);
-      setResult(settings.labels[target]);
+      setResult(settings.labels[target] ?? `Prize ${target + 1}`);
     }, 5300);
   };
 
