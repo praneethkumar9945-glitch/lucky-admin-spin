@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Sparkles, Settings2 } from "lucide-react";
 import { SpinWheel, targetRotationFor } from "@/components/SpinWheel";
 import { SEGMENT_COUNT, useWheelSettings } from "@/lib/wheel-store";
@@ -30,6 +30,11 @@ function SpinPage() {
   const [spinning, setSpinning] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const rotationRef = useRef(0);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
+
+
 
 
   const spin = () => {
@@ -58,7 +63,11 @@ function SpinPage() {
         </h1>
       </header>
 
-      <SpinWheel labels={settings.labels} rotation={rotation} spinning={spinning} />
+      {mounted ? (
+        <SpinWheel labels={settings.labels} rotation={rotation} spinning={spinning} />
+      ) : (
+        <div className="wheel-shell" aria-hidden />
+      )}
 
       <div className="flex min-h-24 flex-col items-center gap-4">
         <button
@@ -67,14 +76,13 @@ function SpinPage() {
           className="btn-spin"
         >
           <Sparkles className="h-5 w-5" />
-          {spinning ? "Spinning…" : "Spin the Wheel"}
+          <span>{spinning ? "Spinning…" : "Spin the Wheel"}</span>
         </button>
-        {result && (
-          <div className="result-pop" role="status">
-            You won <span className="text-gold">{result}</span>!
-          </div>
-        )}
+        <div className="result-pop" role="status" hidden={!result}>
+          You won <span className="text-gold">{result ?? ""}</span>!
+        </div>
       </div>
+
 
       <Link to="/admin" className="link-admin">
         <Settings2 className="h-4 w-4" />
