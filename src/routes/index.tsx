@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { Sparkles, Settings2 } from "lucide-react";
 import { SpinWheel, targetRotationFor } from "@/components/SpinWheel";
-import { loadSettings, onSettingsChange, SEGMENT_COUNT, type WheelSettings } from "@/lib/wheel-store";
+import { SEGMENT_COUNT, useWheelSettings } from "@/lib/wheel-store";
 
 export const Route = createFileRoute("/")({
   head: () => ({
