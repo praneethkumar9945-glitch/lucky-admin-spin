@@ -30,6 +30,11 @@ function SpinPage() {
   const [spinning, setSpinning] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const rotationRef = useRef(0);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
+
+
 
 
   const spin = () => {
