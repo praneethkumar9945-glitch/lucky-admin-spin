@@ -34,12 +34,20 @@ function AdminPage() {
     setSaved(false);
   };
 
-  const save = () => {
-    saveSettings({
-      labels: settings.labels.map((l, i) => (l.trim() ? l : `Prize ${i + 1}`)),
-      forcedIndex: settings.forcedIndex,
-    });
-    setSaved(true);
+  const save = async () => {
+    setSaving(true);
+    setError(null);
+    try {
+      await saveSettings({
+        labels: settings.labels.map((l, i) => (l.trim() ? l : `Prize ${i + 1}`)),
+        forcedIndex: settings.forcedIndex,
+      });
+      setSaved(true);
+    } catch {
+      setError("Could not save. Check your connection and try again.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
