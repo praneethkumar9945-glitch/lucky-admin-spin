@@ -93,10 +93,12 @@ function AdminPage() {
         <button onClick={() => setSettings((s) => ({ ...s, forcedIndex: -1 }))} className="btn-target">
           <Dices className="h-4 w-4" /> Random outcome
         </button>
-        <button onClick={save} className="btn-spin">
-          <Save className="h-5 w-5" /> {saved ? "Saved ✓" : "Save changes"}
+        <button onClick={save} className="btn-spin" disabled={saving || loading}>
+          <Save className="h-5 w-5" /> {saving ? "Saving…" : saved ? "Saved ✓" : "Save changes"}
         </button>
       </div>
+      {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
+
 
       <p className="mt-4 text-sm text-muted-foreground">
         {settings.forcedIndex >= 0
