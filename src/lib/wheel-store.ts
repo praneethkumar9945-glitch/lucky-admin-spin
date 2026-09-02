@@ -68,7 +68,7 @@ export async function saveSettings(settings: WheelSettings) {
 }
 
 /** Shared settings, kept in sync live across every device. */
-export function useWheelSettings() {
+export function useWheelSettings(live = true) {
   const [settings, setSettings] = useState<WheelSettings>(DEFAULT_SETTINGS);
   const [loading, setLoading] = useState(true);
 
@@ -89,7 +89,7 @@ export function useWheelSettings() {
           const row = payload.new as
             | { labels?: unknown; forced_index?: unknown }
             | undefined;
-          if (row) setSettings(normalize(row.labels, row.forced_index));
+          if (row && live) setSettings(normalize(row.labels, row.forced_index));
         },
       )
       .subscribe();
@@ -98,7 +98,7 @@ export function useWheelSettings() {
       active = false;
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [live]);
 
   return { settings, setSettings, loading };
 }

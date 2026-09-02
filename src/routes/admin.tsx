@@ -15,7 +15,7 @@ export const Route = createFileRoute("/admin")({
 });
 
 function AdminPage() {
-  const { settings, setSettings, loading } = useWheelSettings();
+  const { settings, setSettings, loading } = useWheelSettings(false);
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
