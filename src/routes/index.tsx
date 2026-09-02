@@ -77,7 +77,7 @@ function SpinPage() {
       </div>
 
       <Link to="/admin" className="link-admin">
-        <Settings2 className="h-4 w-4" /> Admin controls
+        <Settings2 className="h-4 w-4" />
       </Link>
     </main>
   );
