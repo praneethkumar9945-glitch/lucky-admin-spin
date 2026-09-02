@@ -59,8 +59,9 @@ function AdminPage() {
       <h1 className="font-display text-3xl font-black tracking-tight">Admin Controls</h1>
       <p className="mt-2 text-muted-foreground">
         Edit the 10 prizes and choose where the wheel will stop. Leave the target on
-        “Random” for a fair spin.
+        “Random” for a fair spin. Changes sync live to every device showing the wheel.
       </p>
+      {loading && <p className="mt-4 text-sm text-muted-foreground">Loading shared settings…</p>}
 
       <section className="mt-8 space-y-3">
         {settings.labels.map((label, i) => {
