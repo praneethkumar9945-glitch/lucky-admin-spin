@@ -1,3 +1,6 @@
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+
 export const SEGMENT_COUNT = 10;
 
 export interface WheelSettings {
@@ -19,48 +22,83 @@ export const DEFAULT_LABELS = [
   "🔁 Spin Again",
 ];
 
-const STORAGE_KEY = "lucky-spin-wheel-settings";
-const EVENT = "lucky-spin-wheel:changed";
+const ROW_ID = "default";
 
-export function loadSettings(): WheelSettings {
-  if (typeof window === "undefined") {
-    return { labels: DEFAULT_LABELS, forcedIndex: -1 };
-  }
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) throw new Error("empty");
-    const parsed = JSON.parse(raw) as Partial<WheelSettings>;
-    const labels = Array.from({ length: SEGMENT_COUNT }, (_, i) => {
-      const raw = parsed.labels?.[i];
+export const DEFAULT_SETTINGS: WheelSettings = {
+  labels: DEFAULT_LABELS,
+  forcedIndex: -1,
+};
+
+function normalize(labels: unknown, forcedIndex: unknown): WheelSettings {
+  const list = Array.isArray(labels) ? labels : [];
+  return {
+    labels: Array.from({ length: SEGMENT_COUNT }, (_, i) => {
+      const raw = list[i];
       return typeof raw === "string" && raw.trim()
         ? raw.slice(0, 24)
         : (DEFAULT_LABELS[i] ?? `Prize ${i + 1}`);
+    }),
+    forcedIndex:
+      typeof forcedIndex === "number" &&
+      forcedIndex >= -1 &&
+      forcedIndex < SEGMENT_COUNT
+        ? forcedIndex
+        : -1,
+  };
+}
+
+export async function fetchSettings(): Promise<WheelSettings> {
+  const { data, error } = await supabase
+    .from("wheel_settings")
+    .select("labels, forced_index")
+    .eq("id", ROW_ID)
+    .maybeSingle();
+  if (error || !data) return DEFAULT_SETTINGS;
+  return normalize(data.labels, data.forced_index);
+}
+
+export async function saveSettings(settings: WheelSettings) {
+  const { error } = await supabase.from("wheel_settings").upsert({
+    id: ROW_ID,
+    labels: settings.labels,
+    forced_index: settings.forcedIndex,
+    updated_at: new Date().toISOString(),
+  });
+  if (error) throw error;
+}
+
+/** Shared settings, kept in sync live across every device. */
+export function useWheelSettings() {
+  const [settings, setSettings] = useState<WheelSettings>(DEFAULT_SETTINGS);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    fetchSettings().then((s) => {
+      if (!active) return;
+      setSettings(s);
+      setLoading(false);
     });
-    const forcedIndex =
-      typeof parsed.forcedIndex === "number" &&
-      parsed.forcedIndex >= -1 &&
-      parsed.forcedIndex < SEGMENT_COUNT
-        ? parsed.forcedIndex
-        : -1;
-    return { labels, forcedIndex };
-  } catch {
-    return { labels: DEFAULT_LABELS, forcedIndex: -1 };
-  }
-}
 
-export function saveSettings(settings: WheelSettings) {
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
-  window.dispatchEvent(new CustomEvent(EVENT));
-}
+    const channel = supabase
+      .channel("wheel-settings")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "wheel_settings" },
+        (payload) => {
+          const row = payload.new as
+            | { labels?: unknown; forced_index?: unknown }
+            | undefined;
+          if (row) setSettings(normalize(row.labels, row.forced_index));
+        },
+      )
+      .subscribe();
 
-export function onSettingsChange(cb: () => void) {
-  window.addEventListener(EVENT, cb);
-  const storageCb = (e: StorageEvent) => {
-    if (e.key === STORAGE_KEY) cb();
-  };
-  window.addEventListener("storage", storageCb);
-  return () => {
-    window.removeEventListener(EVENT, cb);
-    window.removeEventListener("storage", storageCb);
-  };
+    return () => {
+      active = false;
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  return { settings, setSettings, loading };
 }
