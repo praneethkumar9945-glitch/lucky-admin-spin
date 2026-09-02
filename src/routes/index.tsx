@@ -25,13 +25,12 @@ export const Route = createFileRoute("/")({
 });
 
 function SpinPage() {
-  const [settings, setSettings] = useState<WheelSettings>(() => loadSettings());
+  const { settings } = useWheelSettings();
   const [rotation, setRotation] = useState(0);
   const [spinning, setSpinning] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const rotationRef = useRef(0);
 
-  useEffect(() => onSettingsChange(() => setSettings(loadSettings())), []);
 
   const spin = () => {
     if (spinning) return;
