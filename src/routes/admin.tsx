@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { ArrowLeft, Dices, Save, Target } from "lucide-react";
-import { loadSettings, saveSettings, SEGMENT_COUNT, type WheelSettings } from "@/lib/wheel-store";
+import { saveSettings, SEGMENT_COUNT, useWheelSettings } from "@/lib/wheel-store";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -15,8 +15,10 @@ export const Route = createFileRoute("/admin")({
 });
 
 function AdminPage() {
-  const [settings, setSettings] = useState<WheelSettings>(() => loadSettings());
+  const { settings, setSettings, loading } = useWheelSettings(false);
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const updateLabel = (i: number, value: string) => {
     setSettings((s) => {
@@ -32,12 +34,20 @@ function AdminPage() {
     setSaved(false);
   };
 
-  const save = () => {
-    saveSettings({
-      labels: settings.labels.map((l, i) => (l.trim() ? l : `Prize ${i + 1}`)),
-      forcedIndex: settings.forcedIndex,
-    });
-    setSaved(true);
+  const save = async () => {
+    setSaving(true);
+    setError(null);
+    try {
+      await saveSettings({
+        labels: settings.labels.map((l, i) => (l.trim() ? l : `Prize ${i + 1}`)),
+        forcedIndex: settings.forcedIndex,
+      });
+      setSaved(true);
+    } catch {
+      setError("Could not save. Check your connection and try again.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -49,8 +59,9 @@ function AdminPage() {
       <h1 className="font-display text-3xl font-black tracking-tight">Admin Controls</h1>
       <p className="mt-2 text-muted-foreground">
         Edit the 10 prizes and choose where the wheel will stop. Leave the target on
-        “Random” for a fair spin.
+        “Random” for a fair spin. Changes sync live to every device showing the wheel.
       </p>
+      {loading && <p className="mt-4 text-sm text-muted-foreground">Loading shared settings…</p>}
 
       <section className="mt-8 space-y-3">
         {settings.labels.map((label, i) => {
@@ -82,10 +93,12 @@ function AdminPage() {
         <button onClick={() => setSettings((s) => ({ ...s, forcedIndex: -1 }))} className="btn-target">
           <Dices className="h-4 w-4" /> Random outcome
         </button>
-        <button onClick={save} className="btn-spin">
-          <Save className="h-5 w-5" /> {saved ? "Saved ✓" : "Save changes"}
+        <button onClick={save} className="btn-spin" disabled={saving || loading}>
+          <Save className="h-5 w-5" /> {saving ? "Saving…" : saved ? "Saved ✓" : "Save changes"}
         </button>
       </div>
+      {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
+
 
       <p className="mt-4 text-sm text-muted-foreground">
         {settings.forcedIndex >= 0
