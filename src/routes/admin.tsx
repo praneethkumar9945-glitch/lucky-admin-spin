@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { ArrowLeft, Dices, Save, Target } from "lucide-react";
-import { loadSettings, saveSettings, SEGMENT_COUNT, type WheelSettings } from "@/lib/wheel-store";
+import { saveSettings, SEGMENT_COUNT, useWheelSettings } from "@/lib/wheel-store";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
