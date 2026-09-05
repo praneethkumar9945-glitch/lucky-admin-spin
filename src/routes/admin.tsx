@@ -58,6 +58,7 @@ function AdminPage() {
       await saveSettings({
         labels: settings.labels.map((l, i) => (l.trim() ? l : `Prize ${i + 1}`)),
         forcedIndex: settings.forcedIndex,
+        spinNonce: settings.spinNonce,
       });
       setSaved(true);
     } catch {
