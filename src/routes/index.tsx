@@ -1,6 +1,6 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { Sparkles, Settings2 } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { SpinWheel, targetRotationFor } from "@/components/SpinWheel";
 import { SEGMENT_COUNT, useWheelSettings } from "@/lib/wheel-store";
 
