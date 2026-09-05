@@ -10,16 +10,16 @@ export interface WheelSettings {
 }
 
 export const DEFAULT_LABELS = [
-  "🎁 Mystery Box",
-  "💰 500 Coins",
-  "⭐ 2x Points",
-  "🎟️ Free Ticket",
-  "🍀 Lucky Charm",
-  "💎 Gem Pack",
-  "🔥 Hot Streak",
-  "🎉 Party Pop",
-  "🏆 Jackpot",
-  "🔁 Spin Again",
+  "Free",
+  "5%",
+  "10%",
+  "15%",
+  "20%",
+  "25%",
+  "50%",
+  "80%",
+  "Try Again",
+  "Mystery Box",
 ];
 
 const ROW_ID = "default";
