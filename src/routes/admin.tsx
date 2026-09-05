@@ -1,7 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { ArrowLeft, Dices, Save, Target } from "lucide-react";
-import { saveSettings, SEGMENT_COUNT, useWheelSettings } from "@/lib/wheel-store";
+import { ArrowLeft, Dices, Save, Sparkles, Target } from "lucide-react";
+import {
+  saveSettings,
+  SEGMENT_COUNT,
+  triggerRemoteSpin,
+  useWheelSettings,
+} from "@/lib/wheel-store";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -19,6 +24,18 @@ function AdminPage() {
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [spinSent, setSpinSent] = useState(false);
+
+  const remoteSpin = async () => {
+    setError(null);
+    try {
+      await triggerRemoteSpin();
+      setSpinSent(true);
+      window.setTimeout(() => setSpinSent(false), 4000);
+    } catch {
+      setError("Could not start the spin. Check your connection and try again.");
+    }
+  };
 
   const updateLabel = (i: number, value: string) => {
     setSettings((s) => {
@@ -96,6 +113,16 @@ function AdminPage() {
         <button onClick={save} className="btn-spin" disabled={saving || loading}>
           <Save className="h-5 w-5" /> {saving ? "Saving…" : saved ? "Saved ✓" : "Save changes"}
         </button>
+      </div>
+
+      <div className="mt-6 flex flex-wrap items-center gap-3">
+        <button onClick={remoteSpin} className="btn-spin" disabled={loading}>
+          <Sparkles className="h-5 w-5" />
+          {spinSent ? "Spinning now!" : "Spin the wheel remotely"}
+        </button>
+        <span className="text-sm text-muted-foreground">
+          Starts the spin on every device showing the wheel.
+        </span>
       </div>
       {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
 
