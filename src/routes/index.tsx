@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { Sparkles } from "lucide-react";
+import { PartyPopper, Sparkles, Trophy } from "lucide-react";
 import { SpinWheel, targetRotationFor } from "@/components/SpinWheel";
+import { Button } from "@/components/ui/button";
 import { SEGMENT_COUNT, useWheelSettings } from "@/lib/wheel-store";
 
 export const Route = createFileRoute("/")({
@@ -54,6 +55,8 @@ function SpinPage() {
     }, 5300);
   };
 
+  const isTryAgain = result?.trim().toLowerCase() === "try again";
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-8 px-4 py-10">
       <header className="text-center">
@@ -70,20 +73,45 @@ function SpinPage() {
       )}
 
       <div className="flex min-h-24 flex-col items-center gap-4">
-        <button
+        <Button
           onClick={spin}
           disabled={spinning}
           className="btn-spin"
         >
           <Sparkles className="h-5 w-5" />
           <span>{spinning ? "Spinning…" : "Spin the Wheel"}</span>
-        </button>
-        <div className="result-pop" role="status" hidden={!result}>
-          You won <span className="text-gold">{result ?? ""}</span>!
-        </div>
+        </Button>
       </div>
 
-
+      <div
+        className="celebration-screen"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="celebration-title"
+        hidden={!result}
+      >
+        {!isTryAgain && (
+          <div className="confetti" aria-hidden>
+            {Array.from({ length: 48 }, (_, index) => (
+              <i key={index} />
+            ))}
+          </div>
+        )}
+        <div className="celebration-content">
+          <div className="celebration-icon" aria-hidden>
+            {isTryAgain ? <PartyPopper /> : <Trophy />}
+          </div>
+          <p className="celebration-kicker">{isTryAgain ? "Almost there" : "Congratulations!"}</p>
+          <h2 id="celebration-title">
+            {isTryAgain ? "Try Again" : "You won"}
+          </h2>
+          {!isTryAgain && <p className="celebration-prize">{result ?? ""}</p>}
+          <Button className="btn-spin celebration-button" onClick={() => setResult(null)} autoFocus={Boolean(result)}>
+            <Sparkles />
+            Spin Again
+          </Button>
+        </div>
+      </div>
     </main>
   );
 }
