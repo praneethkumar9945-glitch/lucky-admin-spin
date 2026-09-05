@@ -32,6 +32,8 @@ function SpinPage() {
   const [result, setResult] = useState<string | null>(null);
   const rotationRef = useRef(0);
   const [mounted, setMounted] = useState(false);
+  const spinRef = useRef<() => void>(() => {});
+  const lastNonce = useRef<number | null>(null);
 
   useEffect(() => setMounted(true), []);
 
@@ -54,6 +56,21 @@ function SpinPage() {
       setResult(settings.labels[target] ?? `Prize ${target + 1}`);
     }, 5300);
   };
+
+  spinRef.current = spin;
+
+  // A spin started from the admin device
+  useEffect(() => {
+    const nonce = settings.spinNonce;
+    if (lastNonce.current === null) {
+      lastNonce.current = nonce;
+      return;
+    }
+    if (nonce !== lastNonce.current) {
+      lastNonce.current = nonce;
+      spinRef.current();
+    }
+  }, [settings.spinNonce]);
 
   const isTryAgain = result?.trim().toLowerCase() === "try again";
 

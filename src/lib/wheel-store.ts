@@ -7,6 +7,8 @@ export interface WheelSettings {
   labels: string[];
   /** 0-based index the wheel must land on, or -1 for a random outcome */
   forcedIndex: number;
+  /** Increments each time the admin triggers a remote spin */
+  spinNonce: number;
 }
 
 export const DEFAULT_LABELS = [
@@ -27,9 +29,14 @@ const ROW_ID = "default";
 export const DEFAULT_SETTINGS: WheelSettings = {
   labels: DEFAULT_LABELS,
   forcedIndex: -1,
+  spinNonce: 0,
 };
 
-function normalize(labels: unknown, forcedIndex: unknown): WheelSettings {
+function normalize(
+  labels: unknown,
+  forcedIndex: unknown,
+  spinNonce: unknown = 0,
+): WheelSettings {
   const list = Array.isArray(labels) ? labels : [];
   return {
     labels: Array.from({ length: SEGMENT_COUNT }, (_, i) => {
@@ -44,17 +51,18 @@ function normalize(labels: unknown, forcedIndex: unknown): WheelSettings {
       forcedIndex < SEGMENT_COUNT
         ? forcedIndex
         : -1,
+    spinNonce: typeof spinNonce === "number" ? spinNonce : 0,
   };
 }
 
 export async function fetchSettings(): Promise<WheelSettings> {
   const { data, error } = await supabase
     .from("wheel_settings")
-    .select("labels, forced_index")
+    .select("labels, forced_index, spin_nonce")
     .eq("id", ROW_ID)
     .maybeSingle();
   if (error || !data) return DEFAULT_SETTINGS;
-  return normalize(data.labels, data.forced_index);
+  return normalize(data.labels, data.forced_index, data.spin_nonce);
 }
 
 export async function saveSettings(settings: WheelSettings) {
@@ -64,6 +72,19 @@ export async function saveSettings(settings: WheelSettings) {
     forced_index: settings.forcedIndex,
     updated_at: new Date().toISOString(),
   });
+  if (error) throw error;
+}
+
+/** Ask every connected wheel to spin right now. */
+export async function triggerRemoteSpin() {
+  const current = await fetchSettings();
+  const { error } = await supabase
+    .from("wheel_settings")
+    .update({
+      spin_nonce: current.spinNonce + 1,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", ROW_ID);
   if (error) throw error;
 }
 
@@ -87,9 +108,10 @@ export function useWheelSettings(live = true) {
         { event: "*", schema: "public", table: "wheel_settings" },
         (payload) => {
           const row = payload.new as
-            | { labels?: unknown; forced_index?: unknown }
+            | { labels?: unknown; forced_index?: unknown; spin_nonce?: unknown }
             | undefined;
-          if (row && live) setSettings(normalize(row.labels, row.forced_index));
+          if (row && live)
+            setSettings(normalize(row.labels, row.forced_index, row.spin_nonce));
         },
       )
       .subscribe();
